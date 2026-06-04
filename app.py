@@ -1,5 +1,6 @@
 import streamlit as st
 import google.genai as genai
+import os
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -8,16 +9,17 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- SECURE API CLIENT SETUP ---
-# --- SECURE API CLIENT SETUP ---
+# --- FORCE INJECT API KEY INTO ENVIRONMENT ---
+# This forces the underlying Google SDK to find the key automatically
+os.environ["GEMINI_API_KEY"] = "AIzaSyDpmLMgQJTOrL8CHtAqBsbj6MBoVcGlMG4"
+
 try:
-    # Bypassing the local file parsing completely for debugging
-    API_KEY = "AIzaSyDpmLMgQJTOrL8CHtAqBsbj6MBoVcGlMG4"
-    client = genai.Client(api_key=API_KEY)
+    # Initializing without arguments forces it to read from the OS environment variable we just set
+    client = genai.Client()
 except Exception as e:
     st.error(f"⚠️ API Client Setup Error: {e}")
     st.stop()
-# Using standard model string identifier
+
 MODEL_NAME = "gemini-1.5-flash"
 
 # --- SIDEBAR: USER DATA ---
