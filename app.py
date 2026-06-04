@@ -1,5 +1,6 @@
 import streamlit as st
-import google.generativeai as genai
+import google.genai as genai
+import os
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -8,9 +9,18 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- LEGACY SECURE SETUP ---
-API_KEY = "AIzaSyDpmLMgQJTOrL8CHtAqBsbj6MBoVcGlMG4"
-genai.configure(api_key=API_KEY)
+# --- PASTE YOUR NEW API KEY HERE ---
+NEW_API_KEY = "PASTE_YOUR_NEW_AIZASY_KEY_HERE"
+
+# Force inject it into the system environment variables
+os.environ["GEMINI_API_KEY"] = NEW_API_KEY
+
+try:
+    # Initialize the client (it will automatically look for the environment variable)
+    client = genai.Client()
+except Exception as e:
+    st.error(f"⚠️ API Client Setup Error: {e}")
+    st.stop()
 
 MODEL_NAME = "gemini-1.5-flash"
 
@@ -28,6 +38,7 @@ prices = {"Ginger": 180, "Turmeric": 90}
 st.title("🌾 Agri-Oracle: Smart Agriculture Advisor")
 st.markdown("---")
 
+# Display Metrics
 col1, col2, col3 = st.columns(3)
 col1.metric("Weather Outlook", "Monsoon +15%", delta="High Risk", delta_color="inverse")
 col2.metric("Ginger Price", f"₹{prices['Ginger']}/kg")
@@ -48,12 +59,16 @@ def get_recommendation(loc, sl, cap, lang):
     Language: Please provide the response in {lang}.
     """
     try:
-        # Legacy structural call syntax
-        model = genai.GenerativeModel(MODEL_NAME)
-        response = model.generate_content(prompt)
-        return response.text
+        response = client.models.generate_content(
+            model=MODEL_NAME, 
+            contents=prompt
+        )
+        if response.text:
+            return response.text
+        else:
+            return "Error: Received an empty response from the AI model."
     except Exception as api_error:
-        return f"API Call Failed: {str(api_error)}"
+        return f"SDK/API Call Failed: {str(api_error)}"
 
 # --- DISPLAY ADVISORY ---
 st.subheader("📋 Professional Advisory")
@@ -70,6 +85,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+# Translation Button Logic
 def toggle_language():
     st.session_state.language = "Malayalam" if st.session_state.language == "English" else "English"
 
@@ -77,4 +93,5 @@ st.markdown("---")
 btn_label = "Translate to Malayalam" if st.session_state.language == "English" else "English-ലേക്ക് മാറ്റുക"
 st.button(btn_label, on_click=toggle_language)
 
+# --- FOOTER ---
 st.caption("Agri-Oracle Optimizer v1.0 | Data-driven insights for sustainable farming.")
