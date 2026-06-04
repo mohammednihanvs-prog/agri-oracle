@@ -9,15 +9,14 @@ st.set_page_config(
 )
 
 # --- SECURE API CLIENT SETUP ---
+# --- SECURE API CLIENT SETUP ---
 try:
-    # Look for the secret in st.secrets
-    API_KEY = st.secrets["GENAI_API_KEY"]
+    # Bypassing the local file parsing completely for debugging
+    API_KEY = "AIzaSyDpmLMgQJTOrL8CHtAqBsbj6MBoVcGlMG4"
     client = genai.Client(api_key=API_KEY)
 except Exception as e:
-    st.error(f"⚠️ API Key Initialization Error: {e}")
-    st.info("Make sure your secrets.toml has: GENAI_API_KEY = 'your_actual_key'")
+    st.error(f"⚠️ API Client Setup Error: {e}")
     st.stop()
-
 # Using standard model string identifier
 MODEL_NAME = "gemini-1.5-flash"
 
