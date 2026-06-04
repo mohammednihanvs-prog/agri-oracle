@@ -1,6 +1,5 @@
 import streamlit as st
-import google.genai as genai
-import os
+import google.generativeai as genai
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -9,16 +8,9 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- FORCE INJECT API KEY INTO ENVIRONMENT ---
-# This forces the underlying Google SDK to find the key automatically
-os.environ["GEMINI_API_KEY"] = "AIzaSyDpmLMgQJTOrL8CHtAqBsbj6MBoVcGlMG4"
-
-try:
-    # Initializing without arguments forces it to read from the OS environment variable we just set
-    client = genai.Client()
-except Exception as e:
-    st.error(f"⚠️ API Client Setup Error: {e}")
-    st.stop()
+# --- LEGACY SECURE SETUP ---
+API_KEY = "AIzaSyDpmLMgQJTOrL8CHtAqBsbj6MBoVcGlMG4"
+genai.configure(api_key=API_KEY)
 
 MODEL_NAME = "gemini-1.5-flash"
 
@@ -36,7 +28,6 @@ prices = {"Ginger": 180, "Turmeric": 90}
 st.title("🌾 Agri-Oracle: Smart Agriculture Advisor")
 st.markdown("---")
 
-# Display Metrics
 col1, col2, col3 = st.columns(3)
 col1.metric("Weather Outlook", "Monsoon +15%", delta="High Risk", delta_color="inverse")
 col2.metric("Ginger Price", f"₹{prices['Ginger']}/kg")
@@ -57,48 +48,33 @@ def get_recommendation(loc, sl, cap, lang):
     Language: Please provide the response in {lang}.
     """
     try:
-        # Correct google-genai structural call syntax
-        response = client.models.generate_content(
-            model=MODEL_NAME, 
-            contents=prompt
-        )
-        # Verify text payload exists
-        if response.text:
-            return response.text
-        else:
-            return "Error: Received an empty response from the AI model."
+        # Legacy structural call syntax
+        model = genai.GenerativeModel(MODEL_NAME)
+        response = model.generate_content(prompt)
+        return response.text
     except Exception as api_error:
-        # Return the exact error string so we can read it on-screen
-        return f"SDK/API Call Failed: {str(api_error)}"
+        return f"API Call Failed: {str(api_error)}"
 
 # --- DISPLAY ADVISORY ---
 st.subheader("📋 Professional Advisory")
 
-# Language Toggle State Logic
 if 'language' not in st.session_state:
     st.session_state.language = "English"
 
-# Advisory Box with a loading spinner
 with st.spinner("Analyzing real-time market and climate data..."):
     report = get_recommendation(location, soil, capital, st.session_state.language)
 
-# Render the AI report inside a styled card
 st.markdown(f"""
 <div style="background-color:#f0f2f6; padding:20px; border-radius:10px; border-left: 5px solid #2e7d32; color: #1e1e1e;">
     {report}
 </div>
 """, unsafe_allow_html=True)
 
-# Translation Button Logic
 def toggle_language():
-    if st.session_state.language == "English":
-        st.session_state.language = "Malayalam"
-    else:
-        st.session_state.language = "English"
+    st.session_state.language = "Malayalam" if st.session_state.language == "English" else "English"
 
 st.markdown("---")
 btn_label = "Translate to Malayalam" if st.session_state.language == "English" else "English-ലേക്ക് മാറ്റുക"
 st.button(btn_label, on_click=toggle_language)
 
-# --- FOOTER ---
 st.caption("Agri-Oracle Optimizer v1.0 | Data-driven insights for sustainable farming.")
