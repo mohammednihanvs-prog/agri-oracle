@@ -9,14 +9,16 @@ st.set_page_config(
 )
 
 # --- SECURE API CLIENT SETUP ---
-# Pulls the API key securely from st.secrets (local secrets.toml or cloud dashboard)
 try:
+    # Look for the secret in st.secrets
     API_KEY = st.secrets["GENAI_API_KEY"]
     client = genai.Client(api_key=API_KEY)
-except Exception:
-    st.error("⚠️ API Key not found! Please set the GENAI_API_KEY in your Streamlit secrets.")
+except Exception as e:
+    st.error(f"⚠️ API Key Initialization Error: {e}")
+    st.info("Make sure your secrets.toml has: GENAI_API_KEY = 'your_actual_key'")
     st.stop()
 
+# Using standard model string identifier
 MODEL_NAME = "gemini-1.5-flash"
 
 # --- SIDEBAR: USER DATA ---
@@ -40,7 +42,6 @@ col2.metric("Ginger Price", f"₹{prices['Ginger']}/kg")
 col3.metric("Turmeric Price", f"₹{prices['Turmeric']}/kg")
 
 # --- AI LOGIC (CACHED) ---
-# Caching avoids redundant API requests unless the user changes an input parameter
 @st.cache_data(show_spinner=False)
 def get_recommendation(loc, sl, cap, lang):
     prompt = f"""
@@ -55,10 +56,19 @@ def get_recommendation(loc, sl, cap, lang):
     Language: Please provide the response in {lang}.
     """
     try:
-        response = client.models.generate_content(model=MODEL_NAME, contents=prompt)
-        return response.text
-    except Exception as e:
-        return f"Error connecting to AI: {e}"
+        # Correct google-genai structural call syntax
+        response = client.models.generate_content(
+            model=MODEL_NAME, 
+            contents=prompt
+        )
+        # Verify text payload exists
+        if response.text:
+            return response.text
+        else:
+            return "Error: Received an empty response from the AI model."
+    except Exception as api_error:
+        # Return the exact error string so we can read it on-screen
+        return f"SDK/API Call Failed: {str(api_error)}"
 
 # --- DISPLAY ADVISORY ---
 st.subheader("📋 Professional Advisory")
@@ -85,4 +95,9 @@ def toggle_language():
     else:
         st.session_state.language = "English"
 
-st
+st.markdown("---")
+btn_label = "Translate to Malayalam" if st.session_state.language == "English" else "English-ലേക്ക് മാറ്റുക"
+st.button(btn_label, on_click=toggle_language)
+
+# --- FOOTER ---
+st.caption("Agri-Oracle Optimizer v1.0 | Data-driven insights for sustainable farming.")
