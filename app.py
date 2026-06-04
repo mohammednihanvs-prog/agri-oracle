@@ -22,7 +22,7 @@ except Exception as e:
     st.error(f"⚠️ API Client Setup Error: {e}")
     st.stop()
 
-MODEL_NAME = "gemini-1.5-flash"
+MODEL_NAME = "gemini-2.0-flash"
 
 # --- SIDEBAR: USER DATA ---
 st.sidebar.header("📍 User Parameters")
