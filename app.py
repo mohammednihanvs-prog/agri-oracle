@@ -10,7 +10,7 @@ st.set_page_config(
 )
 
 # --- PASTE YOUR NEW API KEY HERE ---
-NEW_API_KEY = "PASTE_YOUR_NEW_AIZASY_KEY_HERE"
+NEW_API_KEY = "AQ.Ab8RN6KtKKYDrzDN-TT2mWxxaGL7c2wpnMRIhdcIpJYX055Kug"
 
 # Force inject it into the system environment variables
 os.environ["GEMINI_API_KEY"] = NEW_API_KEY
