@@ -17,7 +17,7 @@ os.environ["GEMINI_API_KEY"] = NEW_API_KEY
 
 try:
     # Initialize the client (it will automatically look for the environment variable)
-    client = genai.Client()
+    client = genai.Client(api_key=NEW_API_KEY)
 except Exception as e:
     st.error(f"⚠️ API Client Setup Error: {e}")
     st.stop()
